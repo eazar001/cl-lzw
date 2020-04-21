@@ -11,7 +11,7 @@
   (compress-algorithm (init-dict) 256 input-bytes nil))
 
 (defun decompress (input-bytes)
-  "Takes a list of compressed LZW encoded bytes and decompresses is into its original format."
+  "Takes a list of compressed LZW encoded bytes and decompresses them into their original format."
   (apply #'concatenate 'list (decompress-algorithm (init-d-dict) 256 input-bytes nil)))
 
 (defun init-dict ()
