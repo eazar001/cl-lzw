@@ -70,23 +70,16 @@
   (multiple-value-bind (_ found) (gethash code dict)
     (declare (ignore _))
     (if (not found)
-        (setf (gethash code dict) (apply #'concatenate 'list (list byte byte))))))
+        (setf (gethash code dict) (apply #'concatenate 'list (list byte (list (car byte))))))))
 
 (defun decompress-algorithm (dict current-code input-bytes output-bytes)
   (if input-bytes
       (destructuring-bind (encoded-byte . rest) input-bytes
         (let* ((byte (decode-byte encoded-byte dict))
                (next-encoded-byte (car rest))
-               (next-byte (decode-byte next-encoded-byte dict)))
-          (cond ((and byte next-byte)
-                 (add-to-dict current-code (apply #'concatenate 'list (list byte next-byte)) dict)
-                 (decompress-algorithm dict (1+ current-code) rest (cons byte output-bytes)))
-                (byte
-                 (update-d-dict current-code byte dict)
-                 (if rest
-                     (decompress-algorithm dict (1+ current-code) (cons next-encoded-byte (cdr rest)) (cons byte output-bytes))
-                     (decompress-algorithm dict (1+ current-code) (cdr rest) (cons byte output-bytes))))
-                (t
-                 (reverse output-bytes)))))
-
+               (next-byte (list (car (decode-byte next-encoded-byte dict)))))
+          (if (not (equal next-byte '(nil)))
+              (add-to-dict current-code (apply #'concatenate 'list (list byte next-byte)) dict)
+              (update-d-dict current-code byte dict))
+          (decompress-algorithm dict (1+ current-code) rest (cons byte output-bytes))))
       (reverse output-bytes)))
