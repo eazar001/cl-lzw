@@ -45,17 +45,14 @@
   (if input-bytes
       (destructuring-bind (byte . rest) input-bytes
         (let* ((next-byte (car rest))
-               (next-seq (and next-byte (list byte next-byte)))
-               (update-results (multiple-value-list (update-dict next-seq current-code dict)))
-               (updated (car update-results))
-               (found (cadr update-results))
-               (new-code (caddr update-results)))
-          (if updated
-              (compress-algorithm dict (1+ current-code) rest (cons byte output-bytes))
-              (let ((next-seq (cons new-code (cdr rest))))
-                (if found
-                    (compress-algorithm dict current-code next-seq output-bytes)
-                    (compress-algorithm dict current-code next-seq (cons byte output-bytes)))))))
+               (next-seq (and next-byte (list byte next-byte))))
+          (multiple-value-bind (updated found new-code) (update-dict next-seq current-code dict)
+            (if updated
+                (compress-algorithm dict (1+ current-code) rest (cons byte output-bytes))
+                (let ((next-seq (cons new-code (cdr rest))))
+                  (if found
+                      (compress-algorithm dict current-code next-seq output-bytes)
+                      (compress-algorithm dict current-code next-seq (cons byte output-bytes))))))))
       (reverse output-bytes)))
 
 (defun decode-byte (byte dict)
