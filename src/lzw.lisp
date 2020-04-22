@@ -12,7 +12,7 @@
 
 (defun decompress (input-bytes)
   "Takes a list of compressed LZW encoded bytes and decompresses them into their original format."
-  (apply #'concatenate 'list (decompress-algorithm (init-d-dict) 256 input-bytes nil)))
+  (decompress-algorithm (init-d-dict) 256 input-bytes nil))
 
 (defun init-dict ()
   (let ((dict (make-hash-table :test 'equal))
@@ -41,9 +41,6 @@
           (t
            (values nil found old-code)))))
 
-(defun update-input-bytes (new-code input-bytes)
-  (cons new-code (cdr input-bytes)))
-
 (defun compress-algorithm (dict current-code input-bytes output-bytes)
   (if input-bytes
       (destructuring-bind (byte . rest) input-bytes
@@ -55,7 +52,7 @@
                (new-code (caddr update-results)))
           (if updated
               (compress-algorithm dict (1+ current-code) rest (cons byte output-bytes))
-              (let ((next-seq (update-input-bytes new-code rest)))
+              (let ((next-seq (cons new-code (cdr rest))))
                 (if found
                     (compress-algorithm dict current-code next-seq output-bytes)
                     (compress-algorithm dict current-code next-seq (cons byte output-bytes)))))))
@@ -70,7 +67,7 @@
   (multiple-value-bind (_ found) (gethash code dict)
     (declare (ignore _))
     (if (not found)
-        (setf (gethash code dict) (apply #'concatenate 'list (list byte (list (car byte))))))))
+        (setf (gethash code dict) (append byte (list (car byte)))))))
 
 (defun decompress-algorithm (dict current-code input-bytes output-bytes)
   (if input-bytes
@@ -79,7 +76,7 @@
                (next-encoded-byte (car rest))
                (next-byte (list (car (decode-byte next-encoded-byte dict)))))
           (if (not (equal next-byte '(nil)))
-              (add-to-dict current-code (apply #'concatenate 'list (list byte next-byte)) dict)
+              (add-to-dict current-code (append byte next-byte) dict)
               (update-d-dict current-code byte dict))
           (decompress-algorithm dict (1+ current-code) rest (cons byte output-bytes))))
-      (reverse output-bytes)))
+      (apply #'append (reverse output-bytes))))
