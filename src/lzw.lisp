@@ -37,22 +37,20 @@
   (multiple-value-bind (old-code found) (gethash key dict)
     (cond ((not found)
            (add-to-dict key new-code dict)
-           (values new-code found new-code))
+           (values new-code new-code))
           (t
-           (values nil found old-code)))))
+           (values nil old-code)))))
 
 (defun compress-algorithm (dict current-code input-bytes output-bytes)
   (if input-bytes
       (destructuring-bind (byte . rest) input-bytes
         (let* ((next-byte (car rest))
                (next-seq (and next-byte (list byte next-byte))))
-          (multiple-value-bind (updated found new-code) (update-dict next-seq current-code dict)
+          (multiple-value-bind (updated new-code) (update-dict next-seq current-code dict)
             (if updated
                 (compress-algorithm dict (1+ current-code) rest (cons byte output-bytes))
                 (let ((next-seq (cons new-code (cdr rest))))
-                  (if found
-                      (compress-algorithm dict current-code next-seq output-bytes)
-                      (compress-algorithm dict current-code next-seq (cons byte output-bytes))))))))
+                  (compress-algorithm dict current-code next-seq output-bytes))))))
       (reverse output-bytes)))
 
 (defun decode-byte (byte dict)
