@@ -9,18 +9,6 @@
 
 ;;; LZW (Lempel-Ziv-Welch) compression algorithm
 
-(defmacro write-bytes-to-file (bytes file-path bits)
-  `(with-open-file (stream ,file-path :direction :output
-                           :if-does-not-exist :create
-                           :if-exists :overwrite
-                           :element-type (list 'unsigned-byte ,bits))
-     (dolist (b (loop for b in ,bytes collect b))
-       (write-byte b stream))))
-
-(defmacro read-file-bytes-to-list (file-path bits)
-  `(with-open-file (stream ,file-path :direction :input :element-type (list 'unsigned-byte ,bits))
-     (read-bytes-to-list stream nil)))
-
 (defun compress-file (file read-bits write-bits)
   "Compresses a file into an LWZ encoded file with .z extension."
   (let ((out-file (concatenate 'string file ".z")))
@@ -100,6 +88,18 @@
               (update-d-dict current-code byte dict))
           (decompress-algorithm dict (1+ current-code) rest (cons byte output-bytes))))
       (apply #'append (reverse output-bytes))))
+
+(defun write-bytes-to-file (bytes file-path bits)
+  (with-open-file (stream file-path :direction :output
+                           :if-does-not-exist :create
+                           :if-exists :overwrite
+                           :element-type (list 'unsigned-byte bits))
+     (dolist (b (loop for b in bytes collect b))
+       (write-byte b stream))))
+
+(defun read-file-bytes-to-list (file-path bits)
+  (with-open-file (stream file-path :direction :input :element-type (list 'unsigned-byte bits))
+     (read-bytes-to-list stream nil)))
 
 (defun read-bytes-to-list (stream output-bytes)
   (let ((b (read-byte stream nil)))
