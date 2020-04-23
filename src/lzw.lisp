@@ -1,10 +1,35 @@
 (defpackage #:cl-lzw
   (:use :cl)
-  (:export #:compress #:decompress))
+  (:export #:compress
+           #:decompress
+           #:compress-file
+           #:decompress-file))
 
 (in-package #:cl-lzw)
 
 ;;; LZW (Lempel-Ziv-Welch) compression algorithm
+
+(defmacro write-bytes-to-file (bytes file-path bits)
+  `(with-open-file (stream ,file-path :direction :output
+                           :if-does-not-exist :create
+                           :if-exists :overwrite
+                           :element-type (list 'unsigned-byte ,bits))
+     (dolist (b (loop for b in ,bytes collect b))
+       (write-byte b stream))))
+
+(defmacro read-file-bytes-to-list (file-path bits)
+  `(with-open-file (stream ,file-path :direction :input :element-type (list 'unsigned-byte ,bits))
+     (read-bytes-to-list stream nil)))
+
+(defun compress-file (file read-bits write-bits)
+  "Compresses a file into an LWZ encoded file with .z extension."
+  (let ((out-file (concatenate 'string file ".z")))
+    (write-bytes-to-file (compress (read-file-bytes-to-list file read-bits)) out-file write-bits)))
+
+(defun decompress-file (file read-bits write-bits)
+  "Decompresses an encoded LWZ file without the .z extension."
+  (let ((out-file (string-right-trim ".z" file)))
+    (write-bytes-to-file (decompress (read-file-bytes-to-list file read-bits)) out-file write-bits)))
 
 (defun compress (input-bytes)
   "Takes a list of bytes and encodes them into compressed LZW format."
@@ -41,6 +66,17 @@
           (t
            (values nil old-code)))))
 
+(defun update-d-dict (code byte dict)
+  (multiple-value-bind (_ found) (gethash code dict)
+    (declare (ignore _))
+    (if (not found)
+        (setf (gethash code dict) (append byte (list (car byte)))))))
+
+(defun decode-byte (byte dict)
+  (multiple-value-bind (val found) (gethash byte dict)
+    (cond (found val)
+          (t nil))))
+
 (defun compress-algorithm (dict current-code input-bytes output-bytes)
   (if input-bytes
       (destructuring-bind (byte . rest) input-bytes
@@ -53,17 +89,6 @@
                   (compress-algorithm dict current-code next-seq output-bytes))))))
       (reverse output-bytes)))
 
-(defun decode-byte (byte dict)
-  (multiple-value-bind (val found) (gethash byte dict)
-    (cond (found val)
-          (t nil))))
-
-(defun update-d-dict (code byte dict)
-  (multiple-value-bind (_ found) (gethash code dict)
-    (declare (ignore _))
-    (if (not found)
-        (setf (gethash code dict) (append byte (list (car byte)))))))
-
 (defun decompress-algorithm (dict current-code input-bytes output-bytes)
   (if input-bytes
       (destructuring-bind (encoded-byte . rest) input-bytes
@@ -75,3 +100,9 @@
               (update-d-dict current-code byte dict))
           (decompress-algorithm dict (1+ current-code) rest (cons byte output-bytes))))
       (apply #'append (reverse output-bytes))))
+
+(defun read-bytes-to-list (stream output-bytes)
+  (let ((b (read-byte stream nil)))
+    (if b
+        (read-bytes-to-list stream (cons b output-bytes))
+        (reverse output-bytes))))
