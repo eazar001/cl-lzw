@@ -10,13 +10,13 @@
 ;;; LZW (Lempel-Ziv-Welch) compression algorithm
 
 (defun compress-file (file read-bits write-bits)
-  "Compresses a file into an LWZ encoded file with .z extension."
-  (let ((out-file (concatenate 'string file ".z")))
+  "Compresses a file into an LWZ encoded file with .Z extension."
+  (let ((out-file (concatenate 'string file ".Z")))
     (write-bytes-to-file (compress (read-file-bytes-to-list file read-bits)) out-file write-bits)))
 
 (defun decompress-file (file read-bits write-bits)
-  "Decompresses an encoded LWZ file without the .z extension."
-  (let ((out-file (string-right-trim ".z" file)))
+  "Decompresses an encoded LWZ file without the .Z extension."
+  (let ((out-file (string-right-trim ".Z" file)))
     (write-bytes-to-file (decompress (read-file-bytes-to-list file read-bits)) out-file write-bits)))
 
 (defun compress (input-bytes)
