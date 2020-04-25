@@ -92,7 +92,7 @@
 (defun write-bytes-to-file (bytes file-path bits)
   (with-open-file (stream file-path :direction :output
                            :if-does-not-exist :create
-                           :if-exists :overwrite
+                           :if-exists :supersede
                            :element-type (list 'unsigned-byte bits))
      (dolist (b (loop for b in bytes collect b))
        (write-byte b stream))))
