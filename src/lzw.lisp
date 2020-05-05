@@ -88,7 +88,7 @@
                (next-byte (list (car (decode-byte next-encoded-byte dict)))))
           (if (and (/= encoded-byte 256) (/= encoded-byte 257) (not (equal next-byte '(nil))))
               (add-to-dict current-code (append byte next-byte) dict)
-              (update-d-dict current-code byte dict))
+              (and byte (update-d-dict current-code byte dict)))
           (cond ((= encoded-byte 256)
                  (decompress-algorithm (init-d-dict) 258 rest output-bytes))
                 ((= encoded-byte 257)
