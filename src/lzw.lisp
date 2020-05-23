@@ -95,7 +95,12 @@
                  (decompress-algorithm dict current-code rest output-bytes))
                 (t
                  (decompress-algorithm dict (1+ current-code) rest (cons byte output-bytes))))))
-      (apply #'append (reverse output-bytes))))
+
+      (let ((r nil))
+        (loop for x in output-bytes
+           do (loop for y in (reverse x)
+                 do (push y r))
+           finally (return r)))))
 
 (defun write-bytes-to-file (bytes file-path bits)
   (with-open-file (stream file-path
