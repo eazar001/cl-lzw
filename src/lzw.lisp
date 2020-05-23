@@ -96,11 +96,7 @@
                 (t
                  (decompress-algorithm dict (1+ current-code) rest (cons byte output-bytes))))))
 
-      (let ((r nil))
-        (loop for x in output-bytes
-           do (loop for y in (reverse x)
-                 do (push y r))
-           finally (return r)))))
+      (loop for x in (nreverse output-bytes) append x)))
 
 (defun write-bytes-to-file (bytes file-path bits)
   (with-open-file (stream file-path
@@ -112,7 +108,9 @@
        (write-byte b stream))))
 
 (defun read-file-bytes-to-list (file-path bits)
-  (with-open-file (stream file-path :direction :input :element-type (list 'unsigned-byte bits))
+  (with-open-file (stream file-path
+                          :direction :input
+                          :element-type (list 'unsigned-byte bits))
      (read-bytes-to-list stream nil)))
 
 (defun read-bytes-to-list (stream output-bytes)
