@@ -21,7 +21,7 @@
 
 ;;; Takes a list of compressed LZW encoded bytes and decompresses them into their original format
 (defun decompress (input-bytes)
-  (decompress-algorithm (init-d-dict) #x102 input-bytes nil))
+  (decompress-algorithm (make-hash-table) #x102 input-bytes nil))
 
 (defun init-dict ()
   (let ((dict (make-hash-table :test 'equal))
@@ -81,7 +81,7 @@
         (let* ((byte (decode-byte encoded-byte dict))
                (next-encoded-byte (car rest))
                (next-byte (list (car (decode-byte next-encoded-byte dict)))))
-          (if (and (/= encoded-byte #x100 #x101) (car next-byte))
+          (if (and (or (< encoded-byte #x100) (> encoded-byte #x101)) (car next-byte))
               (add-to-dict current-code (append byte next-byte) dict)
               (and byte (update-d-dict current-code byte dict)))
           (cond ((= encoded-byte #x100)
