@@ -1,30 +1,26 @@
 (defpackage #:cl-lzw
   (:use :cl)
-  (:export #:compress
-           #:decompress
-           #:compress-file
+  (:export #:compress-file
            #:decompress-file))
 
 (in-package #:cl-lzw)
 
 ;;; LZW (Lempel-Ziv-Welch) compression algorithm
 
-(defun compress-file (file)
-  "Compresses a file into an LWZ encoded file with .Z extension."
-  (let ((out-file (concatenate 'string file ".Z")))
-    (write-bytes-to-file (compress (read-file-bytes-to-list file 8)) out-file 16)))
+(defun compress-file (file out-file)
+  "Compresses a file into an LWZ encoded file."
+  (write-bytes-to-file (compress (read-file-bytes-to-list file 8)) out-file 16))
 
-(defun decompress-file (file)
-  "Decompresses an encoded LWZ file without the .Z extension."
-  (let ((out-file (string-right-trim ".Z" file)))
-    (write-bytes-to-file (decompress (read-file-bytes-to-list file 16)) out-file 8)))
+(defun decompress-file (file out-file)
+  "Decompresses an encoded LWZ file."
+  (write-bytes-to-file (decompress (read-file-bytes-to-list file 16)) out-file 8))
 
+;;; Takes a list of bytes and encodes them into compressed LZW format
 (defun compress (input-bytes)
-  "Takes a list of bytes and encodes them into compressed LZW format."
-  (compress-algorithm (init-dict) #x102 input-bytes nil))
+  (compress-algorithm (init-dict) #x102 input-bytes (list #x100)))
 
+;;; Takes a list of compressed LZW encoded bytes and decompresses them into their original format
 (defun decompress (input-bytes)
-  "Takes a list of compressed LZW encoded bytes and decompresses them into their original format."
   (decompress-algorithm (init-d-dict) #x102 input-bytes nil))
 
 (defun init-dict ()
@@ -76,8 +72,7 @@
                  (multiple-value-bind (updated new-code) (update-dict next-seq current-code dict)
                    (if updated
                        (compress-algorithm dict (1+ current-code) rest (cons byte output-bytes))
-                       (let ((next-seq (cons new-code (cdr rest))))
-                         (compress-algorithm dict current-code next-seq output-bytes))))))
+                       (compress-algorithm dict current-code (cons new-code (cdr rest)) output-bytes)))))
              (reverse (cons #x101 output-bytes))))))
 
 (defun decompress-algorithm (dict current-code input-bytes output-bytes)
@@ -95,7 +90,6 @@
                  (decompress-algorithm dict current-code rest output-bytes))
                 (t
                  (decompress-algorithm dict (1+ current-code) rest (cons byte output-bytes))))))
-
       (loop for x in (nreverse output-bytes) append x)))
 
 (defun write-bytes-to-file (bytes file-path bits)
