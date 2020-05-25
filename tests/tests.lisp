@@ -14,7 +14,8 @@
             (if (probe-file ,b)
                 (delete-file ,b)))))
 
-(def-test compress-don-quixote ()
+(test compress-don-quixote
+  :description "Compress and decompress \"Don Quixote\" novel."
   (cl-lzw:compress-file "tests/text-files/don-quixote.txt" "tests/text-files/don-quixote-compressed.txt")
   (cl-lzw:decompress-file
    "tests/text-files/don-quixote-compressed.txt"
@@ -24,7 +25,8 @@
           (original-bytes (read-file-bytes-to-list "tests/text-files/don-quixote.txt" 8)))
       (is (equal decompressed-bytes original-bytes)))))
 
-(def-test compress-moby-dick ()
+(test compress-moby-dick
+  :description "Compress and decompress \"Moby Dick\" novel."
   (cl-lzw:compress-file "tests/text-files/moby-dick.txt" "tests/text-files/moby-dick-compressed.txt")
   (cl-lzw:decompress-file
    "tests/text-files/moby-dick-compressed.txt"
@@ -34,7 +36,8 @@
           (original-bytes (read-file-bytes-to-list "tests/text-files/moby-dick.txt" 8)))
       (is (equal decompressed-bytes original-bytes)))))
 
-(def-test compress-alice-in-wonderland ()
+(test compress-alice-in-wonderland
+  :description "Compress and decompress \"Alice in Wonderland\" novel."
   (cl-lzw:compress-file
    "tests/text-files/alice-in-wonderland.txt"
    "tests/text-files/alice-in-wonderland-compressed.txt")

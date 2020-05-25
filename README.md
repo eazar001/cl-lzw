@@ -14,15 +14,9 @@ In particular this tends to excel with large text files, TIF files, BMP, etc.
 
 ## Usage
 ```
-;; compress a list of bytes
-(compress '(65 65 65 66))
+;; compress a file with arbitrary 8-bit data into "my-file.Z"
+(compress-file "my-file" "my-file.Z")
 
-;; decompress a list of encoded bytes
-(decompress (compress '(65 65 65 66)))
-
-;; compress a file with arbitrary 8-bit data into "my_file.Z"
-(compress-file "my_file")
-
-;; decompress an LZW encoded "my_file.Z" into its original 8-bit data as "my_file"
-(decompress-file "my_file.Z")
+;; decompress an LZW encoded "my-file.Z" into its original 8-bit data as "my-file"
+(decompress-file "my-file.Z" "my-file")
 ```
