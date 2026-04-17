@@ -9,18 +9,25 @@ INITIAL_CODE = 0x102
 
 
 def compress_file(file_path: str, out_file: str) -> None:
-    """Compress a file into an LZW-encoded file (16-bit codes, little-endian)."""
-    _write_words(compress(_read_bytes(file_path)), out_file)
+    with open(file_path, 'rb') as f:
+        codes = compress(f.read())
+
+    with open(out_file, 'wb') as f:
+        f.write(struct.pack(f'<{len(codes)}H', *codes))
 
 
 def decompress_file(file_path: str, out_file: str) -> None:
-    """Decompress an LZW-encoded file back to its original bytes."""
-    _write_bytes(decompress(_read_words(file_path)), out_file)
+    with open(file_path, 'rb') as f:
+        raw = f.read()
+
+    words = list(struct.unpack_from(f'<{len(raw) // 2}H', raw))
+
+    with open(out_file, 'wb') as f:
+        f.write(decompress(words))
 
 
 def compress(input_bytes: Iterable[int]) -> list[int]:
-    """Encode a sequence of 8-bit values into LZW codes."""
-    dict_: dict[tuple[int, ...], int] = _init_dict()
+    dict_: dict[tuple[int, ...], int] = {(code,): code for code in range(256)}
     current_code = INITIAL_CODE
     output = [CLEAR_CODE]
     inp: deque[int] = deque(input_bytes)
@@ -28,7 +35,7 @@ def compress(input_bytes: Iterable[int]) -> list[int]:
     while inp:
         if current_code > MAX_CODE:
             output.append(CLEAR_CODE)
-            dict_ = _init_dict()
+            dict_ = {(code,): code for code in range(256)}
             current_code = INITIAL_CODE
 
         byte = inp.popleft()
@@ -49,8 +56,7 @@ def compress(input_bytes: Iterable[int]) -> list[int]:
 
 
 def decompress(input_bytes: Iterable[int]) -> bytes:
-    """Decode a sequence of LZW codes back to 8-bit values."""
-    dict_: dict[int, list[int]] = {}
+    dict_: dict[int, list[int]] = {code: [code] for code in range(256)}
     current_code = INITIAL_CODE
     output = bytearray()
     inp: deque[int] = deque(input_bytes)
@@ -71,7 +77,7 @@ def decompress(input_bytes: Iterable[int]) -> bytes:
                 dict_[current_code] = byte + [byte[0]]
 
         if encoded == CLEAR_CODE:
-            dict_ = _init_d_dict()
+            dict_ = {code: [code] for code in range(256)}
             current_code = INITIAL_CODE
         elif encoded == END_CODE:
             pass
@@ -81,33 +87,3 @@ def decompress(input_bytes: Iterable[int]) -> bytes:
             current_code += 1
 
     return bytes(output)
-
-
-def _init_dict() -> dict[tuple[int, ...], int]:
-    return {(code,): code for code in range(256)}
-
-
-def _init_d_dict() -> dict[int, list[int]]:
-    return {code: [code] for code in range(256)}
-
-
-def _read_bytes(path: str) -> bytes:
-    with open(path, 'rb') as f:
-        return f.read()
-
-
-def _write_bytes(data: bytes, path: str) -> None:
-    with open(path, 'wb') as f:
-        f.write(data)
-
-
-def _read_words(path: str) -> list[int]:
-    with open(path, 'rb') as f:
-        raw = f.read()
-    count = len(raw) // 2
-    return list(struct.unpack_from(f'<{count}H', raw))
-
-
-def _write_words(data: list[int], path: str) -> None:
-    with open(path, 'wb') as f:
-        f.write(struct.pack(f'<{len(data)}H', *data))
