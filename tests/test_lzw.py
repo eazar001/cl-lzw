@@ -1,15 +1,10 @@
-import pytest
 from pathlib import Path
-
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from src.lzw import compress_file, decompress_file
 
 TEXT_FILES = Path(__file__).parent / 'text-files'
 
 
-def _round_trip(name, tmp_path):
+def _round_trip(name: str, tmp_path: Path) -> None:
     original = TEXT_FILES / f'{name}.txt'
     compressed = tmp_path / f'{name}-compressed.bin'
     decompressed = tmp_path / f'{name}-decompressed.txt'
@@ -18,13 +13,13 @@ def _round_trip(name, tmp_path):
     assert decompressed.read_bytes() == original.read_bytes()
 
 
-def test_compress_don_quixote(tmp_path):
+def test_compress_don_quixote(tmp_path: Path) -> None:
     _round_trip('don-quixote', tmp_path)
 
 
-def test_compress_moby_dick(tmp_path):
+def test_compress_moby_dick(tmp_path: Path) -> None:
     _round_trip('moby-dick', tmp_path)
 
 
-def test_compress_alice_in_wonderland(tmp_path):
+def test_compress_alice_in_wonderland(tmp_path: Path) -> None:
     _round_trip('alice-in-wonderland', tmp_path)
