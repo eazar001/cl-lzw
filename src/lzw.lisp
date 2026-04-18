@@ -8,11 +8,11 @@
 ;;; LZW (Lempel-Ziv-Welch) compression algorithm
 
 (defun compress-file (file out-file)
-  "Compresses a file into an LWZ encoded file."
+  "Compresses a file into an LZW encoded file."
   (write-bytes-to-file (compress (read-file-bytes-to-list file 8)) out-file 16))
 
 (defun decompress-file (file out-file)
-  "Decompresses an encoded LWZ file."
+  "Decompresses an encoded LZW file."
   (write-bytes-to-file (decompress (read-file-bytes-to-list file 16)) out-file 8))
 
 ;;; Takes a list of bytes and encodes them into compressed LZW format
